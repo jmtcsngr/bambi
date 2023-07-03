@@ -20,5 +20,7 @@ jobs:
       - name: "Docker build"
         run: |
           cd docker
-          docker build --rm -t gpig .
+          docker build --rm \
+            --build-arg HTSLIB_BRANCH=1.17 \
+            -t gpig .
           docker run gpig
