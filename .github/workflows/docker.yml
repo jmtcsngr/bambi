@@ -49,7 +49,7 @@ jobs:
           docker run --rm -i -v /"${PWD}"/.hadolint.yaml:/.config/hadolint.yaml ghcr.io/hadolint/hadolint < docker/Dockerfile
 
   build-docker:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest 
 
     defaults:
       run:
@@ -63,12 +63,15 @@ jobs:
 
       - name: "Docker build"
         run: |
+          set -x
           docker build --rm \
             -f docker/Dockerfile \
             --build-arg HTSLIB_BRANCH=1.17 \
             -t bambi .
-          docker run bambi
-          docker scout cves bambi
-          docker exec bambi ls
+          docker run -d --name bambi bambi sleep 600 
           docker container ls -a
           docker ps -a
+          docker exec bambi bash -c "bambi --version"
+          docker container ls -a
+          docker ps -a
+          ls -la . docker

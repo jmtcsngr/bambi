@@ -7,7 +7,10 @@ RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
     apt-get install -qq -y --no-install-recommends \
       autoconf \
+      automake \
+      autotools-dev \
       build-essential \
+      ca-certificates \
       git \
       libbz2-dev \
       libcurl4-openssl-dev \
@@ -16,12 +19,12 @@ RUN apt-get update && \
       libssl-dev \
     && \
     export HTSLIB=/usr/local/src/htslib && \
-    git clone --branch "${HTSLIB_BRANCH}" https://github.com/samtools/htslib.git "${HTSLIB}" && \
+    git clone --depth 1 --branch "${HTSLIB_BRANCH}" https://github.com/samtools/htslib.git "${HTSLIB}" && \
     cd "${HTSLIB}" && \
     git submodule update --init --recursive && \
     mkdir -p /tmp/usr/local && autoreconf -i && ./configure --prefix=/tmp/usr/local && make && make install
 
-FROM debian:bookworm as bambi_build
+FROM debian:bookworm AS bambi_build
 
 COPY --from=htslib_build /tmp/usr/local /usr/local
 COPY . /usr/local/src/bambi
@@ -32,6 +35,8 @@ RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
     apt-get install -qq -y --no-install-recommends \
       autoconf \
+      automake \
+      autotools-dev \
       build-essential \
       bzip2 \
       git \
@@ -51,7 +56,7 @@ RUN apt-get update && \
     make CPPFLAGS="-I$PREFIX/include" LDFLAGS="-L$PREFIX/lib" && \
     make install prefix="$PREFIX"
 
-FROM debian:bookworm as bambi
+FROM debian:bookworm AS bambi
 
 COPY --from=htslib_build /tmp/usr/local /usr/local
 COPY --from=bambi_build /tmp/usr/local /usr/local
@@ -72,4 +77,4 @@ RUN apt-get update && \
    apt-get clean && \
    rm -rf /var/lib/apt/lists/*
 
-CMD ["/usr/local/bin/bambi", "--version"]
+CMD ["/bin/bash"]
