@@ -1,10 +1,10 @@
-FROM debian:latest AS build_htslib
+FROM debian:latest AS htslib_build
 
 ARG HTSLIB_BRANCH
 
-RUN apt update && \
-    DEBIAN_FRONTEND=noninteractive apt upgrade -y && \
-    apt install -qq -y \
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
+    apt-get install -qq -y \
       autoconf \
       build-essential \
       git \
@@ -18,18 +18,60 @@ RUN apt update && \
     git clone --branch $HTSLIB_BRANCH https://github.com/samtools/htslib.git $HTSLIB && \
     cd $HTSLIB && \
     git submodule update --init --recursive && \
-    mkdir -p /tmp/usr/local && autoreconf -i && ./configure --prefix=/tmp/usr/local && make && make install && \
-    ls -R /tmp/usr/local
+    mkdir -p  /tmp/usr/local && autoreconf -i && ./configure --prefix=/tmp/usr/local && make && make install
 
-FROM debian:latest as bambi-build
+FROM debian:latest as bambi_build
 
-COPY --from=build_htslib /tmp/usr/local /usr/local
+COPY --from=htslib_build /tmp/usr/local /usr/local
 COPY . /usr/local/src/bambi
 
-RUN apt update && \
-    DEBIAN_FRONTEND=noninteractive apt upgrade -y && \
-    ls -laR /usr/local && \
-    cd /usr/local/src/bambi && \
-    autoreconf -i && ./configure --with-htslib=/usr/local && make && make check && make install
+WORKDIR /usr/local/src/bambi
 
-CMD ["/usr/bin/echo", "Hello World"]
+RUN apt-get update && \
+    DEBIAN_FRONTEND=n oninteractive apt-get upgrade -y && \
+    apt-get install -qq -y \
+      autoconf \
+      build-essential \
+      bzip2 \
+      git \
+      libbz2-dev \
+      libcurl4-openssl-dev \
+      libtool \
+      libgd-dev \
+      liblzma-dev \
+      libxml2-dev \
+      libz-dev \
+      libssl-dev \
+    && \
+    export PREFIX=/tmp/usr/local && \
+    autoreconf -fi && \
+    CPPFLAGS="-I$PREFIX/include" LDFLAGS="-Wl,-rpath,$PREFIX/lib -L$PREFIX/lib" \
+            ./configure --prefix="$PREFIX" --with-htslib="$PREFIX" && \
+    make CPPFLAGS="-I$PREFIX/include" LDFLAGS="-L$PREFIX/lib" && \
+    make install prefix="$PREFIX" && \
+    ls -laR  /usr/local/bin
+
+CMD ["/usr/local/bin/bambi", "--version"]
+
+FROM debian:latest as bambi
+
+COPY --from=htslib_build /tmp/usr/local /usr/local
+COPY --from=bambi_build /tmp/usr/local /usr/local
+
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
+    apt-get install -qq -y \
+      bzip2 \
+      libbz2-dev \
+      libcurl4-openssl-dev \
+      libtool \
+      libgd-dev \
+      liblzma-dev \
+      libxml2-dev \
+      libz-dev \
+      libssl-dev \
+   && \
+   apt-get clean && \
+   rm -rf /var/lib/apt/lists/*
+
+CMD ["/usr/local/bin/bambi", "--version"]
