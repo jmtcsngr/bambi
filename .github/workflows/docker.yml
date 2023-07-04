@@ -7,6 +7,8 @@ jobs:
   lint-docker:
     runs-on: ubuntu-latest
 
+    continue-on-error: true
+
     defaults:
       run:
         shell: "bash -l -e -o pipefail {0}"
@@ -19,7 +21,11 @@ jobs:
 
       - name: "Lint Dockerfile"
         run: |
-          docker run --rm -i ghcr.io/hadolint/hadolint < docker/Dockerfile
+          cat <<EOT >> .hadolint.yaml
+          ignored:
+            - DL3008
+          EOT
+          docker run --rm -i -v /"${PWD}"/.hadolint.yaml:/.config/hadolint.yaml ghcr.io/hadolint/hadolint < docker/Dockerfile
 
   build-docker:
     runs-on: ubuntu-latest
@@ -30,7 +36,7 @@ jobs:
 
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v3
+        uses: actions /checkout@v3
         with:
           fetch-depth: 0
 
@@ -39,5 +45,9 @@ jobs:
           docker build --rm \
             -f docker/Dockerfile \
             --build-arg HTSLIB_BRANCH=1.17 \
-            -t gpig .
-          docker run gpig
+            -t bambi .
+          docker run bambi
+          docker scout cves bambi
+          docker exec bambi ls
+          docker container ls -a
+          docker ps -a

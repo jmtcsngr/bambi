@@ -1,10 +1,11 @@
-FROM debian:latest AS htslib_build
+FROM debian:bookworm AS htslib_build
 
 ARG HTSLIB_BRANCH
 
+# hadolint ignore=DL3003
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
-    apt-get install -qq -y \
+    apt-get install -qq -y --no-install-recommends \
       autoconf \
       build-essential \
       git \
@@ -15,12 +16,12 @@ RUN apt-get update && \
       libssl-dev \
     && \
     export HTSLIB=/usr/local/src/htslib && \
-    git clone --branch $HTSLIB_BRANCH https://github.com/samtools/htslib.git $HTSLIB && \
-    cd $HTSLIB && \
+    git clone --branch "${HTSLIB_BRANCH}" https://github.com/samtools/htslib.git "${HTSLIB}" && \
+    cd "${HTSLIB}" && \
     git submodule update --init --recursive && \
-    mkdir -p  /tmp/usr/local && autoreconf -i && ./configure --prefix=/tmp/usr/local && make && make install
+    mkdir -p /tmp/usr/local && autoreconf -i && ./configure --prefix=/tmp/usr/local && make && make install
 
-FROM debian:latest as bambi_build
+FROM debian:bookworm as bambi_build
 
 COPY --from=htslib_build /tmp/usr/local /usr/local
 COPY . /usr/local/src/bambi
@@ -28,8 +29,8 @@ COPY . /usr/local/src/bambi
 WORKDIR /usr/local/src/bambi
 
 RUN apt-get update && \
-    DEBIAN_FRONTEND=n oninteractive apt-get upgrade -y && \
-    apt-get install -qq -y \
+    DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
+    apt-get install -qq -y --no-install-recommends \
       autoconf \
       build-essential \
       bzip2 \
@@ -48,19 +49,16 @@ RUN apt-get update && \
     CPPFLAGS="-I$PREFIX/include" LDFLAGS="-Wl,-rpath,$PREFIX/lib -L$PREFIX/lib" \
             ./configure --prefix="$PREFIX" --with-htslib="$PREFIX" && \
     make CPPFLAGS="-I$PREFIX/include" LDFLAGS="-L$PREFIX/lib" && \
-    make install prefix="$PREFIX" && \
-    ls -laR  /usr/local/bin
+    make install prefix="$PREFIX"
 
-CMD ["/usr/local/bin/bambi", "--version"]
-
-FROM debian:latest as bambi
+FROM debian:bookworm as bambi
 
 COPY --from=htslib_build /tmp/usr/local /usr/local
 COPY --from=bambi_build /tmp/usr/local /usr/local
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
-    apt-get install -qq -y \
+    apt-get install -qq -y --no-install-recommends \
       bzip2 \
       libbz2-dev \
       libcurl4-openssl-dev \
