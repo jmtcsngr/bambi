@@ -66,7 +66,7 @@ jobs:
           set -x
           docker build --rm \
             -f docker/Dockerfile \
-            --build-arg HTSLIB_BRANCH=1.17 \
+            --build-arg HTSLIB_BRANCH=1.18 \
             -t bambi .
           docker run -d --name bambi bambi sleep 600 
           docker container ls -a
