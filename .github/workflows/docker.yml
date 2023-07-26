@@ -70,8 +70,5 @@ jobs:
             -t bambi .
           docker run -d --name bambi bambi sleep 600 
           docker container ls -a
-          docker ps -a
           docker exec bambi bash -c "bambi --version"
-          docker container ls -a
-          docker ps -a
           ls -la . docker
