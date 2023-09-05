@@ -73,8 +73,10 @@ RUN apt-get update && \
       libxml2-dev \
       libz-dev \
       libssl-dev \
-   && \
-   apt-get clean && \
-   rm -rf /var/lib/apt/lists/*
+    && \
+    apt-get remove -q -y unattended-upgrades && \
+    apt-get autoremove -q -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 CMD ["/bin/bash"]
