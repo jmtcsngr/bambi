@@ -1,4 +1,4 @@
-FROM debian:bookworm AS htslib_build
+FROM bitnami/minideb:bookworm AS htslib_build
 
 ARG HTSLIB_BRANCH
 
@@ -24,7 +24,7 @@ RUN apt-get update && \
     git submodule update --init --recursive && \
     mkdir -p /tmp/usr/local && autoreconf -i && ./configure --prefix=/tmp/usr/local && make && make install
 
-FROM debian:bookworm AS bambi_build
+FROM bitnami/minideb:bookworm AS bambi_build
 
 COPY --from=htslib_build /tmp/usr/local /usr/local
 COPY . /usr/local/src/bambi
@@ -56,7 +56,7 @@ RUN apt-get update && \
     make CPPFLAGS="-I$PREFIX/include" LDFLAGS="-L$PREFIX/lib" && \
     make install prefix="$PREFIX"
 
-FROM debian:bookworm AS bambi
+FROM bitnami/minideb:bookworm AS bambi
 
 COPY --from=htslib_build /tmp/usr/local /usr/local
 COPY --from=bambi_build /tmp/usr/local /usr/local
