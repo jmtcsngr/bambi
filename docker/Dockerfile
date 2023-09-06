@@ -67,7 +67,6 @@ RUN apt-get update && \
       bzip2 \
       libbz2-1.0 \
       libcurl4 \
-      libtool \
       libgd3 \
       liblzma5 \
       libxml2 \
