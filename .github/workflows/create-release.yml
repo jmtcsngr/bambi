@@ -42,7 +42,7 @@ jobs:
         run: |
           set -x
           docker build --rm \
-            -f docker/Dockerfile \
+            --file docker/Dockerfile \
             --build-arg HTSLIB_BRANCH=1.18 \
             --platform linux/amd64 \
             --progress plain \
@@ -52,10 +52,6 @@ jobs:
             --tag "ghcr.io/$REPOSITORY_OWNER/$IMAGE_NAME:$RELEASE_VERSION" \
             --tag "ghcr.io/$REPOSITORY_OWNER/$IMAGE_NAME:latest" \
             .
-          docker run -d --name bambi "ghcr.io/$REPOSITORY_OWNER/$IMAGE_NAME:latest" sleep 600
-          docker container ls -a
-          docker exec bambi bash -c "bambi --version"
-          ls -la . docker
 
       - name: "Push image to registry"
         run: |
