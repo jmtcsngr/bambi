@@ -344,7 +344,11 @@ void checkFiles(char *gotfile, char *expectfile, int verbose)
     char expline[1024];
 
     while (fgets(getline, 1023, getfp) > 0) {
-        fgets(expline, 1023, expfp);
+        if ((fgets(expline, 1023, expfp)) == NULL) {
+            if (verbose) fprintf(stderr, "failed to read from expfp\n");
+            failure++;
+            break;
+        }
         if (strcmp(getline,expline) != 0) {
             fprintf(stderr, "Expected: %sFound   : %s\n", expline, getline);
             failure++;
