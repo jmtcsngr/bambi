@@ -50,3 +50,11 @@ jobs:
           export DIST_FILE=$(ls bambi-*.tar.gz)
           export SHA256_FILE=$DIST_FILE.sha256
           shasum -a 256 $DIST_FILE > $SHA256_FILE
+
+    - name: Archive test logs
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-logs
+        path: test-suite.log
+        retention-days: 1
