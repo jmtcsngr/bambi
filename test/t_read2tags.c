@@ -322,10 +322,21 @@ void checkFiles(char *gotfile, char *expectfile, int verbose)
     BAMit_free(bgot);
 
     char cmd[1024];
+    int result_got;
+    int result_exp;
     sprintf(cmd, "samtools view -o /tmp/got.sam %s ", gotfile);
-    system(cmd);
+    result_got = system(cmd);
+    if (result_got) {
+        if (verbose) fprintf(stderr, "execution of samtools view for /tmp/got.sam failed\n");
+        failure++;
+    }
+
     sprintf(cmd, "samtools view -o /tmp/exp.sam %s ", expectfile);
-    system(cmd);
+    result_exp = system(cmd);
+    if (result_exp) {
+        if (verbose) fprintf(stderr, "execution of samtools view for /tmp/exp.sam failed\n");
+        failure++;
+    }
 
     FILE *getfp = fopen("/tmp/got.sam", "r");
     FILE *expfp = fopen("/tmp/exp.sam", "r");
